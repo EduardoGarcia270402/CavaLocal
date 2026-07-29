@@ -97,6 +97,7 @@ async function main() {
       membershipTier: e.tier,
       authorized: true,
     })),
+    skipDuplicates: true,
   });
 
   await prisma.wine.createMany({
@@ -113,12 +114,15 @@ async function main() {
       referencePrice: w.price,
       verified: true,
     })),
+    skipDuplicates: true,
   });
 
-  await prisma.availability.createMany({ data: buildAvailability() });
+  await prisma.availability.createMany({ data: buildAvailability(), skipDuplicates: true });
 
-  await prisma.review.create({
-    data: { userId: ana.id, targetType: 'WINE', wineId: 'las-moras-malbec', rating: 5, comment: 'Excelente relación precio-calidad.' },
+  await prisma.review.upsert({
+    where: { userId_wineId: { userId: ana.id, wineId: 'las-moras-malbec' } },
+    update: {},
+    create: { userId: ana.id, targetType: 'WINE', wineId: 'las-moras-malbec', rating: 5, comment: 'Excelente relación precio-calidad.' },
   });
 
   // eslint-disable-next-line no-console

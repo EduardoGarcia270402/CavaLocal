@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cavalocal-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: cavalocal-backend }
+  template:
+    metadata:
+      labels: { app: cavalocal-backend }
+    spec:
+      containers:
+        - name: backend
+          image: cavalocal-backend:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 3001 }
+          env:
+            - { name: PORT, valueFrom: { configMapKeyRef: { name: cavalocal-config, key: BACKEND_PORT } } }
+            - { name: NODE_ENV, valueFrom: { configMapKeyRef: { name: cavalocal-config, key: NODE_ENV } } }
+            - { name: CORS_ORIGINS, valueFrom: { configMapKeyRef: { name: cavalocal-config, key: CORS_ORIGINS } } }
+            - { name: WEB_BASE_URL, valueFrom: { configMapKeyRef: { name: cavalocal-config, key: WEB_BASE_URL } } }
+            - { name: DATABASE_URL, valueFrom: { secretKeyRef: { name: cavalocal-secrets, key: DATABASE_URL } } }
+            - { name: RABBITMQ_URL, valueFrom: { secretKeyRef: { name: cavalocal-secrets, key: RABBITMQ_URL } } }
+            - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: cavalocal-secrets, key: JWT_SECRET } } }
+          readinessProbe:
+            httpGet: { path: /health/ready, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health/live, port: http }
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          resources:
+            requests: { cpu: 100m, memory: 192Mi }
+            limits: { cpu: 750m, memory: 512Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector: { app: cavalocal-backend }
+  ports:
+    - { name: http, port: 3001, targetPort: http }

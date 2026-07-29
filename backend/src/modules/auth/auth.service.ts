@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Optional,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -13,6 +14,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { GoogleVerifierService } from './google-verifier.service';
+import { AuditPublisherService } from '../audit/audit-publisher.service';
 
 export interface AuthResult {
   accessToken: string;
@@ -27,6 +29,7 @@ export class AuthService {
     private readonly googleVerifier: GoogleVerifierService,
     private readonly email: EmailService,
     private readonly config: ConfigService,
+    @Optional() private readonly audit?: AuditPublisherService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResult> {
@@ -37,6 +40,10 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const user = await this.prisma.user.create({
       data: { name: dto.name.trim(), email, phone: dto.phone, passwordHash },
+    });
+    await this.audit?.publish({
+      entity: 'user', action: 'CREATE', userId: user.id, userEmail: user.email,
+      data: { after: { id: user.id, name: user.name, email: user.email, role: user.role } },
     });
     return this.buildResult(user);
   }
@@ -62,8 +69,16 @@ export class AuthService {
       user = await this.prisma.user.create({
         data: { name: profile.name, email, googleId: profile.sub, passwordHash },
       });
+      await this.audit?.publish({
+        entity: 'user', action: 'CREATE', userId: user.id, userEmail: user.email,
+        data: { after: { id: user.id, name: user.name, email: user.email, role: user.role, provider: 'google' } },
+      });
     } else if (!user.googleId) {
       await this.prisma.user.update({ where: { id: user.id }, data: { googleId: profile.sub } });
+      await this.audit?.publish({
+        entity: 'user', action: 'UPDATE', userId: user.id, userEmail: user.email,
+        data: { before: { googleLinked: false }, after: { googleLinked: true } },
+      });
     }
     return this.buildResult(user);
   }
@@ -103,6 +118,10 @@ export class AuthService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: { passwordHash, resetToken: null, resetTokenExpiresAt: null },
+    });
+    await this.audit?.publish({
+      entity: 'user', action: 'UPDATE', userId: user.id, userEmail: user.email,
+      data: { changedFields: ['password'] },
     });
     return { ok: true };
   }

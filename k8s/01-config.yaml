@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cavalocal-config
+data:
+  NODE_ENV: production
+  BACKEND_PORT: "3001"
+  AUDIT_PORT: "3002"
+  CORS_ORIGINS: "http://conjunta3p.espe.edu.ec"
+  WEB_BASE_URL: "http://conjunta3p.espe.edu.ec"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cavalocal-secrets
+type: Opaque
+stringData:
+  POSTGRES_USER: cavalocal
+  POSTGRES_PASSWORD: cavalocal_dev_change_me
+  POSTGRES_DB: cavalocal
+  DATABASE_URL: postgresql://cavalocal:cavalocal_dev_change_me@postgres-service:5432/cavalocal?schema=public
+  AUDIT_DATABASE_URL: postgresql://cavalocal:cavalocal_dev_change_me@postgres-service:5432/cavalocal
+  RABBITMQ_DEFAULT_USER: cavalocal
+  RABBITMQ_DEFAULT_PASS: cavalocal_rabbit_change_me
+  RABBITMQ_URL: amqp://cavalocal:cavalocal_rabbit_change_me@rabbitmq-service:5672
+  JWT_SECRET: change-this-before-production-please

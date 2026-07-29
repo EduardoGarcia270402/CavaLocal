@@ -13,4 +13,7 @@ export const configuration = () => ({
     appPassword: process.env.MAIL_APP_PASSWORD as string,
   },
   corsOrigins: (process.env.CORS_ORIGINS ?? '*').split(',').map((s) => s.trim()),
+  rabbitmq: {
+    url: process.env.RABBITMQ_URL ?? 'amqp://guest:guest@localhost:5672',
+  },
 });

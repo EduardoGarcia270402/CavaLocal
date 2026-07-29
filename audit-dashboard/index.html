@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CavaLocal | Auditoria</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">CavaLocal · Operaciones</p>
+      <h1>Auditoria en tiempo real</h1>
+      <p class="subtitle">Trazabilidad de vinos, tiendas, usuarios, reservas y pagos.</p>
+    </div>
+    <div id="connection" class="status status--connecting"><span></span> Conectando</div>
+  </header>
+
+  <main>
+    <section class="filters" aria-label="Filtros">
+      <label>Entidad
+        <select id="entity">
+          <option value="">Todas</option><option value="wine">Vinos</option><option value="store">Tiendas</option>
+          <option value="user">Usuarios</option><option value="reservation">Reservas</option><option value="payment">Pagos</option>
+        </select>
+      </label>
+      <label>Accion
+        <select id="action">
+          <option value="">Todas</option><option>CREATE</option><option>UPDATE</option><option>DELETE</option><option>PAY</option>
+        </select>
+      </label>
+      <label>Usuario
+        <input id="user" type="search" placeholder="ID o correo" autocomplete="off">
+      </label>
+      <button id="apply" type="button">Aplicar filtros</button>
+    </section>
+
+    <section class="panel">
+      <div class="panel__head"><h2>Eventos recientes</h2><span id="count">0 eventos</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Entidad</th><th>Accion</th><th>Usuario</th><th></th></tr></thead>
+          <tbody id="events"><tr><td colspan="5" class="empty">Cargando auditorias...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="detail">
+    <div class="dialog__head"><div><p class="eyebrow">Detalle del evento</p><h2 id="detail-title"></h2></div><button id="close" aria-label="Cerrar">×</button></div>
+    <dl id="meta"></dl>
+    <h3>Datos JSON</h3>
+    <pre id="json"></pre>
+  </dialog>
+  <script src="app.js" defer></script>
+</body>
+</html>
